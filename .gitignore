@@ -39,3 +39,8 @@ package-lock.json
 
 *.bak
 dashboard/data/
+
+# OpenClaw runtime artifacts
+dashboard/data/
+data/intake-drafts/
+*.bak
