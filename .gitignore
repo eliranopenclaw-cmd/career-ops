@@ -44,3 +44,8 @@ dashboard/data/
 dashboard/data/
 data/intake-drafts/
 *.bak
+
+# OpenClaw runtime artifacts
+dashboard/data/
+data/intake-drafts/
+*.bak
