@@ -36,3 +36,6 @@ node_modules/
 .claude/memory/
 career-dashboard
 package-lock.json
+
+*.bak
+dashboard/data/
