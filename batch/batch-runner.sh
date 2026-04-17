@@ -347,10 +347,9 @@ process_offer() {
     -e "s|{{ID}}|${esc_id}|g" \
     "$PROMPT_FILE" > "$resolved_prompt"
 
-  # Launch claude -p worker (uses default model from Claude Max subscription)
+  # Launch claude -p worker without bypassing permission prompts.
   local exit_code=0
   claude -p \
-    --dangerously-skip-permissions \
     --append-system-prompt-file "$resolved_prompt" \
     "$prompt" \
     > "$log_file" 2>&1 || exit_code=$?
