@@ -1,6 +1,8 @@
 # Career-Ops for Codex
 
-Read `CODEX.md` for all project instructions, routing, and behavioral rules.
+When this repo is used from an OpenClaw session, root OpenClaw policy (`../soul.md`, `../AGENTS.md`, `../TOOLS.md`, `../CODEX.md`) wins for approvals, logging, and runtime routing.
+
+Then read `CODEX.md` for career-ops project instructions, routing, and behavioral rules that do not conflict with OpenClaw governance.
 
 Key points:
 - Reuse the existing modes, scripts, templates, and tracker flow — do not create parallel logic.

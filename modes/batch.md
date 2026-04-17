@@ -5,7 +5,7 @@ Dos modos de uso: **conductor --chrome** (navega portales en tiempo real) o **st
 ## Arquitectura
 
 ```
-Claude Conductor (claude --chrome --dangerously-skip-permissions)
+Claude Conductor (claude --chrome, with normal permission prompts)
   │
   │  Chrome: navega portales (sesiones logueadas)
   │  Lee DOM directo — el usuario ve todo en tiempo real
@@ -44,7 +44,7 @@ batch/
    c. Calcular siguiente REPORT_NUM secuencial
    d. Ejecutar via Bash:
       ```bash
-      claude -p --dangerously-skip-permissions \
+      claude -p \
         --append-system-prompt-file batch/batch-prompt.md \
         "Procesa esta oferta. URL: {url}. JD: /tmp/batch-jd-{id}.txt. Report: {num}. ID: {id}"
       ```
