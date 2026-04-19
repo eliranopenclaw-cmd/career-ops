@@ -16,15 +16,18 @@
  */
 
 import { readFileSync, writeFileSync, appendFileSync, existsSync } from 'fs';
+import { dirname, join } from 'path';
+import { fileURLToPath } from 'url';
 import yaml from 'js-yaml';
 const parseYaml = yaml.load;
 
 // ── Config ──────────────────────────────────────────────────────────
 
-const PORTALS_PATH = 'portals.yml';
-const SCAN_HISTORY_PATH = 'data/scan-history.tsv';
-const PIPELINE_PATH = 'data/pipeline.md';
-const APPLICATIONS_PATH = 'data/applications.md';
+const CAREER_OPS = dirname(fileURLToPath(import.meta.url));
+const PORTALS_PATH = join(CAREER_OPS, 'portals.yml');
+const SCAN_HISTORY_PATH = join(CAREER_OPS, 'data/scan-history.tsv');
+const PIPELINE_PATH = join(CAREER_OPS, 'data/pipeline.md');
+const APPLICATIONS_PATH = join(CAREER_OPS, 'data/applications.md');
 
 const CONCURRENCY = 10;
 const FETCH_TIMEOUT_MS = 10_000;
@@ -32,12 +35,36 @@ const FETCH_TIMEOUT_MS = 10_000;
 // ── API detection ───────────────────────────────────────────────────
 
 function detectApi(company) {
-  // Greenhouse: explicit api field
-  if (company.api && company.api.includes('greenhouse')) {
-    return { type: 'greenhouse', url: company.api };
+  const api = company.api || '';
+  const platform = (company.platform || '').toLowerCase();
+  const url = company.careers_url || company.url || '';
+
+  if (api) {
+    if (api.includes('boards-api.greenhouse.io')) {
+      return { type: 'greenhouse', url: api };
+    }
+    if (api.includes('api.ashbyhq.com')) {
+      return { type: 'ashby', url: api };
+    }
+    if (api.includes('api.lever.co')) {
+      return { type: 'lever', url: api };
+    }
   }
 
-  const url = company.careers_url || '';
+  if (platform === 'greenhouse' && /^https:\/\/boards-api\.greenhouse\.io\//.test(url)) {
+    return { type: 'greenhouse', url };
+  }
+  if (platform === 'ashby' && /^https:\/\/api\.ashbyhq\.com\//.test(url)) {
+    return { type: 'ashby', url };
+  }
+  if (platform === 'lever' && /^https:\/\/api\.lever\.co\//.test(url)) {
+    return { type: 'lever', url };
+  }
+
+  // Greenhouse: explicit api field
+  if (api && api.includes('greenhouse')) {
+    return { type: 'greenhouse', url: api };
+  }
 
   // Ashby
   const ashbyMatch = url.match(/jobs\.ashbyhq\.com\/([^/?#]+)/);
@@ -120,8 +147,8 @@ async function fetchJson(url) {
 // ── Title filter ────────────────────────────────────────────────────
 
 function buildTitleFilter(titleFilter) {
-  const positive = (titleFilter?.positive || []).map(k => k.toLowerCase());
-  const negative = (titleFilter?.negative || []).map(k => k.toLowerCase());
+  const positive = (titleFilter?.positive || titleFilter?.include || []).map(k => k.toLowerCase());
+  const negative = (titleFilter?.negative || titleFilter?.exclude || []).map(k => k.toLowerCase());
 
   return (title) => {
     const lower = title.toLowerCase();
@@ -272,7 +299,16 @@ async function main() {
   const skippedCount = companies.filter(c => c.enabled !== false).length - targets.length;
 
   console.log(`Scanning ${targets.length} companies via API (${skippedCount} skipped — no API detected)`);
-  if (dryRun) console.log('(dry run — no files will be written)\n');
+  if (dryRun) {
+    console.log('(dry run — API target preview only; no network calls or writes)\n');
+    for (const company of targets.slice(0, 10)) {
+      console.log(`  · ${company.name} -> ${company._api.type} ${company._api.url}`);
+    }
+    if (targets.length > 10) {
+      console.log(`  … ${targets.length - 10} more targets`);
+    }
+    return;
+  }
 
   // 3. Load dedup sets
   const seenUrls = loadSeenUrls();

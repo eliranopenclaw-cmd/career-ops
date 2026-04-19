@@ -52,6 +52,20 @@ function error(msg) { console.log(`❌ ${msg}`); errors++; }
 function warn(msg) { console.log(`⚠️  ${msg}`); warnings++; }
 function ok(msg) { console.log(`✅ ${msg}`); }
 
+function extractApplicationTableLines(markdown) {
+  const allLines = markdown.split('\n');
+  const start = allLines.findIndex(line => line.startsWith('| # |'));
+  if (start === -1) return [];
+
+  const tableLines = [];
+  for (let index = start; index < allLines.length; index++) {
+    const line = allLines[index];
+    if (!line.startsWith('|')) break;
+    tableLines.push(line);
+  }
+  return tableLines;
+}
+
 // --- Read applications.md ---
 if (!existsSync(APPS_FILE)) {
   console.log('\n📊 No applications.md found. This is normal for a fresh setup.');
@@ -59,7 +73,7 @@ if (!existsSync(APPS_FILE)) {
   process.exit(0);
 }
 const content = readFileSync(APPS_FILE, 'utf-8');
-const lines = content.split('\n');
+const lines = extractApplicationTableLines(content);
 
 const entries = [];
 for (const line of lines) {
@@ -148,7 +162,7 @@ if (badScores === 0) ok('All scores valid');
 let badRows = 0;
 for (const line of lines) {
   if (!line.startsWith('|')) continue;
-  if (line.includes('---') || line.includes('Empresa')) continue;
+  if (line.includes('---') || line.includes('Empresa') || line.startsWith('| # |')) continue;
   const parts = line.split('|');
   if (parts.length < 9) {
     error(`Row with <9 columns: ${line.substring(0, 80)}...`);
